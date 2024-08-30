@@ -33,6 +33,7 @@ export function hashFiles(files: FileEntry[]): string {
 	const hashData = files.map(({ filename, mtime, size }) => {
 		return { filename, mtime, size };
 	});
+	console.log('hashData:', hashData)
 	return hashString(JSON.stringify(hashData));
 }
 
@@ -43,6 +44,17 @@ export async function directoryExists(dir: string): Promise<boolean> {
 	try {
 		const stats = await stat(dir);
 		return stats.isDirectory();
+	} catch {
+		return false;
+	}
+}
+/**
+ * Check if file exists
+ */
+export async function fileExists(filepath: string): Promise<boolean> {
+	try {
+		const stats = await stat(filepath);
+		return stats.isFile();
 	} catch {
 		return false;
 	}

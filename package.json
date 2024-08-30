@@ -11,11 +11,12 @@
 		"type": "git",
 		"url": "https://github.com/iconify/api.git"
 	},
-	"packageManager": "npm@10.6.0",
+	"packageManager": "yarn@1.22.22",
 	"engines": {
 		"node": ">=16.15.0"
 	},
 	"scripts": {
+		"s": "yarn build && yarn start --watch",
 		"build": "tsc -b",
 		"test": "vitest --config vitest.config.mjs",
 		"start": "node --expose-gc lib/index.js",
@@ -30,8 +31,10 @@
 		"@iconify/tools": "^4.0.4",
 		"@iconify/types": "^2.0.0",
 		"@iconify/utils": "^2.1.23",
+		"@prisma/client": "5.19.0",
 		"dotenv": "^16.4.5",
-		"fastify": "^4.26.2"
+		"fastify": "^4.26.2",
+		"prisma": "^5.19.0"
 	},
 	"devDependencies": {
 		"@types/jest": "^29.5.12",

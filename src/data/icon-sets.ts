@@ -41,7 +41,7 @@ export function getPrefixes(type: GetPrefixes = 'all'): string[] {
 /**
  * All icon sets
  */
-export const iconSets = Object.create(null) as Record<string, IconSetEntry>;
+export let iconSets = Object.create(null) as Record<string, IconSetEntry>;
 
 /**
  * Loaded icon sets
@@ -60,6 +60,7 @@ export function updateIconSets(): number {
 	const newPrefixes: Set<string> = new Set();
 	const newPrefixesWithInfo: Set<string> = new Set();
 	const newVisiblePrefixes: Set<string> = new Set();
+	const newIconSets = Object.create(null) as Record<string, IconSetEntry>;
 
 	importers.forEach((importer, importerIndex) => {
 		const data = importer.data;
@@ -89,13 +90,17 @@ export function updateIconSets(): number {
 				}
 			}
 
-			// Set data
-			iconSets[prefix] = {
+			// Add data to a new temporary icon set.
+			// If some files have deleted from icons folder, they're not be here, too.
+			newIconSets[prefix] = {
 				importer,
 				item,
 			};
 		});
 	});
+
+	// Set data
+	iconSets = newIconSets;
 
 	// Replace list of icon sets
 	if (loadedIconSets.size) {
@@ -125,14 +130,14 @@ export function updateIconSets(): number {
 /**
  * Trigger update
  */
-export function triggerIconSetsUpdate(done?: (success?: boolean) => void) {
+export function triggerIconSetsUpdate(index?: number | null, done?: (success?: boolean) => void) {
 	if (!importers) {
 		done?.();
 		return;
 	}
 	console.log('Checking for updates...');
 
-	(async () => {
+	return (async () => {
 		// Clear as much memory as possible by running storage cleanup immediately
 		try {
 			global.gc?.();
@@ -141,6 +146,9 @@ export function triggerIconSetsUpdate(done?: (success?: boolean) => void) {
 		// Check for updates
 		let updated = false;
 		for (let i = 0; i < importers?.length; i++) {
+			if (typeof index === 'number' && i !== index) {
+				continue;
+			}
 			updated = (await importers[i].checkForUpdate()) || updated;
 		}
 		return updated;

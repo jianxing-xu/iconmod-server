@@ -15,6 +15,8 @@ import { generateUpdateResponse } from './responses/update.js';
 import { initVersionResponse, versionResponse } from './responses/version.js';
 import { generateIconsStyleResponse } from './responses/css.js';
 import { handleJSONResponse } from './helpers/send.js';
+import { blankIconSet, IconSet } from '@iconify/tools';
+import { CreateIconSetBody, handleCreateIconSet } from './responses/collection-create.js';
 
 /**
  * Start HTTP server
@@ -62,12 +64,37 @@ export async function startHTTPServer() {
 		name: string;
 	}
 
+	/** user */
+	// login
+	server.post('/addto-collection', (req, res) => {});
+	// register
+	server.post('/addto-collection', (req, res) => {});
+	// search user
+	server.post('/addto-collection', (req, res) => {});
+	// add project for user
+	server.post('/addto-collection', (req, res) => {});
+	// search user
+	// server.post('/addto-collection', (req, res) => {});
+
+	// add to some icon to owner collection
+	server.post('/addto-collection', (req, res) => {});
+
+	// Create new IconSet (mock project)
+	server.post('/create-collection', (req, res) => {
+		const body = req.body as CreateIconSetBody;
+		if (!body.prefix) return { code: 400 };
+		runWhenLoaded(() => {
+			handleCreateIconSet(body, res);
+		});
+	});
+
 	// SVG: /prefix/icon.svg, /prefix:name.svg, /prefix-name.svg
 	server.get(
 		'/:prefix(' + iconNameRoutePartialRegEx + ')/:name(' + iconNameRoutePartialRegEx + ').svg',
 		(req, res) => {
 			type Params = PrefixParams & NameParams;
 			const name = req.params as Params;
+			res.header('Cache-Control', 'public, max-age=3600');
 			runWhenLoaded(() => {
 				generateSVGResponse(name.prefix, name.name, req.query, res);
 			});
