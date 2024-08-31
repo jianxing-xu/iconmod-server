@@ -20,6 +20,7 @@
 		"build": "tsc -b",
 		"test": "vitest --config vitest.config.mjs",
 		"start": "node --expose-gc lib/index.js",
+		"mgr": "npx prisma migrate dev",
 		"docker:build": "./docker.sh",
 		"docker:start": "docker run -d -p 3000:3000 iconify/api",
 		"docker:stop": "docker ps -q --filter ancestor=iconify/api | xargs -r docker stop",
@@ -28,6 +29,7 @@
 	},
 	"dependencies": {
 		"@fastify/formbody": "^7.4.0",
+		"@fastify/jwt": "^8.0.1",
 		"@iconify/tools": "^4.0.4",
 		"@iconify/types": "^2.0.0",
 		"@iconify/utils": "^2.1.23",

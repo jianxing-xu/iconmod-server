@@ -11,15 +11,25 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique
-  name     String    @unique
-  pwd      String
-  projects Project[]
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  name           String          @unique
+  pwd            String
+  projectMembers ProjectMember[]
+}
+
+model ProjectMember {
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
+  role      Int // 0: member 1:admin
+  projectId Int
+  userId    Int
 }
 
 model Project {
-  id          Int    @id @default(autoincrement())
-  users       User[]
-  adminUserId Int    @unique
+  id            Int             @id @default(autoincrement())
+  name          String          @unique // same as iconset prefix
+  desc          String          @default("project desc")
+  ProjectMember ProjectMember[]
 }

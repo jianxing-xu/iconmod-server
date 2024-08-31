@@ -1,4 +1,4 @@
-import fastify from 'fastify';
+import fastify, { FastifyRequest } from 'fastify';
 import fastifyFormBody from '@fastify/formbody';
 import { appConfig, httpHeaders } from '../config/app.js';
 import { runWhenLoaded } from '../data/loading.js';
@@ -15,8 +15,10 @@ import { generateUpdateResponse } from './responses/update.js';
 import { initVersionResponse, versionResponse } from './responses/version.js';
 import { generateIconsStyleResponse } from './responses/css.js';
 import { handleJSONResponse } from './helpers/send.js';
-import { blankIconSet, IconSet } from '@iconify/tools';
 import { CreateIconSetBody, handleCreateIconSet } from './responses/collection-create.js';
+import { handleLogin, handleRegister, handleSearchUser, handleUserInfo, SearchUserQuery } from './responses/user.js';
+import { handleAddIcon, handleAddUserToProject, handleMemberList } from './responses/project.js';
+import jwt from '@fastify/jwt';
 
 /**
  * Start HTTP server
@@ -29,6 +31,7 @@ export async function startHTTPServer() {
 
 	// Support `application/x-www-form-urlencoded`
 	server.register(fastifyFormBody);
+	server.register(jwt, { secret: 'icoomod' });
 
 	// Generate headers to send
 	interface Header {
@@ -52,6 +55,20 @@ export async function startHTTPServer() {
 		}
 		done();
 	});
+	const ignoreRotues = ['/update', '/user/login', '/user/register', '/last-modified', '/robot.txt'];
+	const ignoreSuffix = ['.svg', '.css', '.json', '.js'];
+	server.addHook('onRequest', async (request, reply) => {
+		const routerPath = request.routeOptions.url as string;
+		console.log('[On Request]: ', routerPath);
+		if (ignoreRotues.includes(routerPath) || ignoreSuffix.some((ext) => routerPath.endsWith(ext))) {
+			return;
+		}
+		try {
+			await request.jwtVerify();
+		} catch (err) {
+			reply.send({ code: 400, error: err, message: 'token error' });
+		}
+	});
 
 	// Init various responses
 	await initVersionResponse();
@@ -66,18 +83,33 @@ export async function startHTTPServer() {
 
 	/** user */
 	// login
-	server.post('/addto-collection', (req, res) => {});
+	server.post('/user/login', (req, res) => {
+		runWhenLoaded(() => handleLogin(req, res));
+	});
 	// register
-	server.post('/addto-collection', (req, res) => {});
+	server.post('/user/register', (req, res) => {
+		runWhenLoaded(() => handleRegister(req, res));
+	});
+	// user
+	server.post('/user/info', (req, res) => {
+		runWhenLoaded(() => handleUserInfo(req, res));
+	});
 	// search user
-	server.post('/addto-collection', (req, res) => {});
-	// add project for user
-	server.post('/addto-collection', (req, res) => {});
-	// search user
-	// server.post('/addto-collection', (req, res) => {});
-
-	// add to some icon to owner collection
-	server.post('/addto-collection', (req, res) => {});
+	server.get('/user/search', (req: FastifyRequest<{ Querystring: SearchUserQuery }>, res) => {
+		runWhenLoaded(() => handleSearchUser(req, res));
+	});
+	// add user to project
+	server.post('/project/adduser', (req, res) => {
+		runWhenLoaded(() => handleAddUserToProject(req, res));
+	});
+	// add to some icon to owner project
+	server.post('/project/addicon', (req, res) => {
+		runWhenLoaded(() => handleAddIcon(req, res));
+	});
+	// project members
+	server.get('/project/members', (req, res) => {
+		runWhenLoaded(() => handleMemberList(req, res));
+	});
 
 	// Create new IconSet (mock project)
 	server.post('/create-collection', (req, res) => {
