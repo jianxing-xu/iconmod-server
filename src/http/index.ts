@@ -15,9 +15,8 @@ import { generateUpdateResponse } from './responses/update.js';
 import { initVersionResponse, versionResponse } from './responses/version.js';
 import { generateIconsStyleResponse } from './responses/css.js';
 import { handleJSONResponse } from './helpers/send.js';
-import { CreateIconSetBody, handleCreateIconSet } from './responses/collection-create.js';
 import { handleLogin, handleRegister, handleSearchUser, handleUserInfo, SearchUserQuery } from './responses/user.js';
-import { handleAddIcon, handleAddUserToProject, handleMemberList } from './responses/project.js';
+import { handleAddIcons, handleAddUserToProject, handleCreateProject, handleMemberList } from './responses/project.js';
 import jwt from '@fastify/jwt';
 
 /**
@@ -55,7 +54,18 @@ export async function startHTTPServer() {
 		}
 		done();
 	});
-	const ignoreRotues = ['/update', '/user/login', '/user/register', '/last-modified', '/robot.txt'];
+	const ignoreRotues = [
+		'/update',
+		'/user/login',
+		'/user/register',
+		'/last-modified',
+		'/robot.txt',
+		'/collections',
+		'/collection',
+		'/search',
+		'/list-icons',
+		'/keywords',
+	];
 	const ignoreSuffix = ['.svg', '.css', '.json', '.js'];
 	server.addHook('onRequest', async (request, reply) => {
 		const routerPath = request.routeOptions.url as string;
@@ -98,26 +108,22 @@ export async function startHTTPServer() {
 	server.get('/user/search', (req: FastifyRequest<{ Querystring: SearchUserQuery }>, res) => {
 		runWhenLoaded(() => handleSearchUser(req, res));
 	});
+	/** project */
 	// add user to project
 	server.post('/project/adduser', (req, res) => {
 		runWhenLoaded(() => handleAddUserToProject(req, res));
 	});
 	// add to some icon to owner project
-	server.post('/project/addicon', (req, res) => {
-		runWhenLoaded(() => handleAddIcon(req, res));
+	server.post('/project/addicons', (req, res) => {
+		runWhenLoaded(() => handleAddIcons(req, res));
 	});
 	// project members
 	server.get('/project/members', (req, res) => {
 		runWhenLoaded(() => handleMemberList(req, res));
 	});
-
-	// Create new IconSet (mock project)
-	server.post('/create-collection', (req, res) => {
-		const body = req.body as CreateIconSetBody;
-		if (!body.prefix) return { code: 400 };
-		runWhenLoaded(() => {
-			handleCreateIconSet(body, res);
-		});
+	// create project
+	server.post('/project/create', (req, res) => {
+		runWhenLoaded(() => handleCreateProject(req, res));
 	});
 
 	// SVG: /prefix/icon.svg, /prefix:name.svg, /prefix-name.svg
@@ -261,17 +267,17 @@ export async function startHTTPServer() {
 	});
 
 	// Error handling
-	server.setDefaultRoute((req, res) => {
+	server.setNotFoundHandler((req, res) => {
 		res.statusCode = 404;
 		console.log('404:', req.url);
 
 		// Need to set custom headers because hooks don't work here
 		for (let i = 0; i < headers.length; i++) {
 			const header = headers[i];
-			res.setHeader(header.key, header.value);
+			res.header(header.key, header.value);
 		}
 
-		res.end();
+		res.send();
 	});
 
 	// Start it

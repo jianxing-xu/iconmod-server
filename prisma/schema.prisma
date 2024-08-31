@@ -28,8 +28,10 @@ model ProjectMember {
 }
 
 model Project {
-  id            Int             @id @default(autoincrement())
-  name          String          @unique // same as iconset prefix
-  desc          String          @default("project desc")
-  ProjectMember ProjectMember[]
+  id                 Int             @id @default(autoincrement())
+  name               String
+  prefix             String          @unique // same as iconset prefix
+  desc               String          @default("project desc")
+  projectMember      ProjectMember[]
+  projectIconSetJSON String
 }

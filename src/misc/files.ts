@@ -33,7 +33,6 @@ export function hashFiles(files: FileEntry[]): string {
 	const hashData = files.map(({ filename, mtime, size }) => {
 		return { filename, mtime, size };
 	});
-	console.log('hashData:', hashData)
 	return hashString(JSON.stringify(hashData));
 }
 

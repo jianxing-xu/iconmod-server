@@ -17,9 +17,12 @@
 	},
 	"scripts": {
 		"s": "yarn build && yarn start --watch",
+		"dev": "yarn build:watch && yarn start:watch",
 		"build": "tsc -b",
+		"build:watch": "tsc -b",
 		"test": "vitest --config vitest.config.mjs",
 		"start": "node --expose-gc lib/index.js",
+		"start:watch": "node --expose-gc --watch lib/index.js",
 		"mgr": "npx prisma migrate dev",
 		"docker:build": "./docker.sh",
 		"docker:start": "docker run -d -p 3000:3000 iconify/api",
@@ -36,7 +39,8 @@
 		"@prisma/client": "5.19.0",
 		"dotenv": "^16.4.5",
 		"fastify": "^4.26.2",
-		"prisma": "^5.19.0"
+		"prisma": "^5.19.0",
+		"zod": "^3.23.8"
 	},
 	"devDependencies": {
 		"@types/jest": "^29.5.12",

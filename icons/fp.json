@@ -1,35 +1,24 @@
 {
-  "prefix": "fp",
-  "info": {
-    "name": "fpweb",
-    "total": 1,
-    "version": "1.9.4",
-    "author": {
-      "name": "Jackson Xu",
-      "url": "xxxxxxxx"
-    },
-    "license": {
-      "title": "Open Font License",
-      "spdx": "OFL-1.1",
-      "url": "https://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL"
-    },
-    "samples": [],
-    "height": 32,
-    "displayHeight": 16,
-    "category": "FridayParts",
-    "palette": false
-  },
-  "icons": {
-    "arrow-left": {
-      "body": "<g fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M5.854 4.646a.5.5 0 0 1 0 .708L3.207 8l2.647 2.646a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 0 1 .708 0z\"/><path fill-rule=\"evenodd\" d=\"M2.5 8a.5.5 0 0 1 .5-.5h10.5a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z\"/></g>",
-      "width": 16,
-      "height": 16
-    }
-  },
-  "aliases": {
-    "arrow-right": {
-      "parent": "arrow-left",
-      "hFlip": true
-    }
-  }
+	"prefix": "fp",
+	"info": {
+		"name": "FP Icons",
+		"total": 2,
+		"version": "0.0.1",
+		"author": { "name": "PROJECT", "url": "/" },
+		"license": { "title": "MIT", "spdx": "MIT" },
+		"height": 24,
+		"displayHeight": 24,
+		"palette": false
+	},
+	"lastModified": 1725114482,
+	"icons": {
+		"adobe-ani": {
+			"body": "<path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"m169.658 137.076l27.928 109.382h-55.157zM512 0v512H0V0zM271.325 356.538l-75.825-256h-52.52c-.531 13.05-1.326 15.964-2.645 20.713L73.008 356.538h40.468l19.179-71.68h74.705l19.766 71.68zm162.246-124.043c0-73.454-63.051-83.034-142.537-52.739c1.164 13.499 1.504 23.648 1.504 25.975v151.04h43.055V205.265c34.821-9.685 57.917-4.355 57.25 30.488v120.785h40.728z\" clip-rule=\"evenodd\"/>"
+		},
+		"arrow-right": {
+			"body": "<path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12m4.25-4a.75.75 0 0 0-1.5 0v2a2.75 2.75 0 0 0 2.75 2.75h2.25V16a.75.75 0 0 0 1.5 0V8a.75.75 0 0 0-1.5 0v3.25H7.5c-.69 0-1.25-.56-1.25-1.25zm12.77-.54a.75.75 0 0 1 .02 1.06l-2.666 2.773l2.757 4.302a.75.75 0 1 1-1.262.81l-2.564-4l-1.055 1.097V16a.75.75 0 0 1-1.5 0V8a.75.75 0 0 1 1.5 0v3.338l3.71-3.858a.75.75 0 0 1 1.06-.02\" clip-rule=\"evenodd\"/>"
+		}
+	},
+	"width": 24,
+	"height": 24
 }

@@ -34,13 +34,16 @@ export type LoginBody = {
 export async function handleLogin(req: FastifyRequest, res: FastifyReply) {
 	try {
 		const body = req.body as LoginBody;
+		console.log(body);
 		const user = await prisma.user.findUnique({ where: { email: body.email } });
+		console.log(user);
 		if (!user) return res.send({ code: 400, error: 'user not found' });
 		const { pwd, ...o } = user;
 		if (body.pwd !== pwd) return res.send({ code: 400, error: 'email or pwd error' });
 		const token = await res.jwtSign(o);
 		res.send({ code: 200, data: user, token });
 	} catch (error) {
+		console.log(error);
 		res.send({ code: 400, error });
 	}
 }
