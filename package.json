@@ -31,6 +31,7 @@
 		"docker:publish": "docker push iconify/api"
 	},
 	"dependencies": {
+		"@fastify/cookie": "^9.4.0",
 		"@fastify/formbody": "^7.4.0",
 		"@fastify/jwt": "^8.0.1",
 		"@iconify/tools": "^4.0.4",

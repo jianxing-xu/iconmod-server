@@ -16,8 +16,16 @@ import { initVersionResponse, versionResponse } from './responses/version.js';
 import { generateIconsStyleResponse } from './responses/css.js';
 import { handleJSONResponse } from './helpers/send.js';
 import { handleLogin, handleRegister, handleSearchUser, handleUserInfo, SearchUserQuery } from './responses/user.js';
-import { handleAddIcons, handleAddUserToProject, handleCreateProject, handleMemberList } from './responses/project.js';
+import {
+	handleAddIcons,
+	handleAddUserToProject,
+	handleCreateProject,
+	handleMemberList,
+	queryAllProejcts,
+	queryProjectInfo,
+} from './responses/project.js';
 import jwt from '@fastify/jwt';
+import cookie from '@fastify/cookie';
 
 /**
  * Start HTTP server
@@ -30,7 +38,14 @@ export async function startHTTPServer() {
 
 	// Support `application/x-www-form-urlencoded`
 	server.register(fastifyFormBody);
-	server.register(jwt, { secret: 'icoomod' });
+	server.register(jwt, {
+		secret: 'icoomod',
+		cookie: {
+			cookieName: 'iconmod-token',
+			signed: false,
+		},
+	});
+	server.register(cookie);
 
 	// Generate headers to send
 	interface Header {
@@ -101,7 +116,7 @@ export async function startHTTPServer() {
 		runWhenLoaded(() => handleRegister(req, res));
 	});
 	// user
-	server.post('/user/info', (req, res) => {
+	server.get('/user/info', (req, res) => {
 		runWhenLoaded(() => handleUserInfo(req, res));
 	});
 	// search user
@@ -124,6 +139,12 @@ export async function startHTTPServer() {
 	// create project
 	server.post('/project/create', (req, res) => {
 		runWhenLoaded(() => handleCreateProject(req, res));
+	});
+	server.get('/project/list', (req, res) => {
+		runWhenLoaded(() => queryAllProejcts(req, res));
+	});
+	server.get('/project/info', (req, res) => {
+		runWhenLoaded(() => queryProjectInfo(req, res));
 	});
 
 	// SVG: /prefix/icon.svg, /prefix:name.svg, /prefix-name.svg

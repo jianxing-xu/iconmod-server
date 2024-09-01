@@ -21,7 +21,8 @@ export async function handleRegister(req: FastifyRequest, res: FastifyReply) {
 			},
 		});
 		const { pwd: _, ...o } = record;
-		res.send({ code: 200, data: o, token: await res.jwtSign(o) });
+		res.setCookie('iconmod-token', await res.jwtSign(o));
+		res.send({ code: 200, data: o });
 	} catch (error) {
 		res.send({ code: 400, error });
 	}
@@ -34,13 +35,17 @@ export type LoginBody = {
 export async function handleLogin(req: FastifyRequest, res: FastifyReply) {
 	try {
 		const body = req.body as LoginBody;
-		console.log(body);
+		console.log(body.email);
 		const user = await prisma.user.findUnique({ where: { email: body.email } });
 		console.log(user);
 		if (!user) return res.send({ code: 400, error: 'user not found' });
 		const { pwd, ...o } = user;
 		if (body.pwd !== pwd) return res.send({ code: 400, error: 'email or pwd error' });
 		const token = await res.jwtSign(o);
+		res.setCookie('iconmod-token', token, {
+			expires: new Date(Date.now() + 86400000),
+			path: '/',
+		});
 		res.send({ code: 200, data: user, token });
 	} catch (error) {
 		console.log(error);
@@ -48,8 +53,7 @@ export async function handleLogin(req: FastifyRequest, res: FastifyReply) {
 	}
 }
 export function handleUserInfo(req: FastifyRequest, res: FastifyReply) {
-	const reqUser = req.user as User;
-	const user = prisma.user.findUnique({ where: { id: reqUser.id } });
+	const { iat, ...user } = req.user as User & { iat: number };
 	res.send({ code: 200, data: user });
 }
 

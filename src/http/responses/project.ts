@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import { Project, User } from '@prisma/client';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../../data/prisma.js';
 import { IconSet } from '@iconify/tools';
@@ -9,6 +9,8 @@ import { triggerIconSetsUpdate } from '../../data/icon-sets.js';
 import z from 'zod';
 import { IconifyJSON } from '@iconify/types';
 import { writeIconSet } from '../../data/custom-icon.js';
+import { createAPIv2CollectionResponse } from './collection-v2.js';
+import { APIv2CollectionResponse } from '../../types/server/v2.js';
 
 export type AddUserToProjectBody = {
 	projectId: string;
@@ -135,7 +137,7 @@ export async function handleCreateProject(req: FastifyRequest, res: FastifyReply
 				total: 0,
 				version: '0.0.1',
 				author: {
-					name: 'PROJECT',
+					name: reqUser.name,
 					url: '/',
 				},
 				license: { title: 'MIT', spdx: 'MIT' },
@@ -143,6 +145,7 @@ export async function handleCreateProject(req: FastifyRequest, res: FastifyReply
 				height: 24,
 				displayHeight: 24,
 				palette: false,
+				category: 'PROJECT',
 			},
 			icons: {},
 		});
@@ -176,4 +179,45 @@ export async function handleCreateProject(req: FastifyRequest, res: FastifyReply
 	} catch (error) {
 		res.send({ code: 400, error });
 	}
+}
+
+export async function queryAllProejcts(req: FastifyRequest, res: FastifyReply) {
+	const reqUser = req.user as User;
+	try {
+		const projects = await prisma.project.findMany({
+			where: {
+				projectMember: {
+					some: {
+						userId: reqUser.id,
+					},
+				},
+			},
+			select: { id: true, name: true, prefix: true, desc: true, total: true },
+		});
+		res.send({ code: 200, data: projects });
+	} catch (error) {
+		res.send({ code: 400, error });
+	}
+}
+
+export type ProjectInfoQuery = {
+	prefix: string;
+};
+export async function queryProjectInfo(req: FastifyRequest, res: FastifyReply) {
+	const query = req.query as ProjectInfoQuery;
+	const record = await prisma.project.findUnique({
+		where: { prefix: query.prefix },
+		select: {
+			id: true,
+			name: true,
+			prefix: true,
+			desc: true,
+			total: true,
+		},
+	});
+	const iconSet = createAPIv2CollectionResponse({ prefix: query.prefix });
+	if (iconSet === 404) {
+		return res.send({ code: 400, error: 'iconset returned 404' });
+	}
+	res.send({ code: 200, data: { ...record, ...((iconSet || {}) as APIv2CollectionResponse) } });
 }

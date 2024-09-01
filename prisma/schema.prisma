@@ -32,6 +32,7 @@ model Project {
   name               String
   prefix             String          @unique // same as iconset prefix
   desc               String          @default("project desc")
+  total              Int             @default(0)
   projectMember      ProjectMember[]
   projectIconSetJSON String
 }
