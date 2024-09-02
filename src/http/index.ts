@@ -21,6 +21,7 @@ import {
 	handleAddUserToProject,
 	handleCreateProject,
 	handleMemberList,
+	handlePackSvgJson,
 	queryAllProejcts,
 	queryProjectInfo,
 } from './responses/project.js';
@@ -80,6 +81,7 @@ export async function startHTTPServer() {
 		'/search',
 		'/list-icons',
 		'/keywords',
+		'/project/packsvg'
 	];
 	const ignoreSuffix = ['.svg', '.css', '.json', '.js'];
 	server.addHook('onRequest', async (request, reply) => {
@@ -145,6 +147,10 @@ export async function startHTTPServer() {
 	});
 	server.get('/project/info', (req, res) => {
 		runWhenLoaded(() => queryProjectInfo(req, res));
+	});
+	server.get('/project/packsvg', (req, res) => handlePackSvgJson(req, res));
+	server.get('/project/removeIcons', (req, res) => {
+		runWhenLoaded(() => handlePackSvgJson(req, res));
 	});
 
 	// SVG: /prefix/icon.svg, /prefix:name.svg, /prefix-name.svg

@@ -121,6 +121,8 @@ export async function handleMemberList(req: FastifyRequest, res: FastifyReply) {
 	}
 }
 
+
+// todos add user, tags, logo
 export type CreateProjectBody = {
 	prefix: string;
 	name: string;
@@ -220,4 +222,53 @@ export async function queryProjectInfo(req: FastifyRequest, res: FastifyReply) {
 		return res.send({ code: 400, error: 'iconset returned 404' });
 	}
 	res.send({ code: 200, data: { ...record, ...((iconSet || {}) as APIv2CollectionResponse) } });
+}
+
+// todos
+export type PackSvgJsonQuery = {
+	projectId: number;
+};
+export async function handlePackSvgJson(req: FastifyRequest, res: FastifyReply) {
+	try {
+		const query = req.query as PackSvgJsonQuery;
+		const v = z.string().transform((v) => parseInt(v));
+		const pid = v.parse(query.projectId);
+		const record = await prisma.project.findUnique({ where: { id: pid }, select: { projectIconSetJSON: true } });
+		return { code: 200, data: record };
+	} catch (error) {
+		res.send({ code: 400, error });
+	}
+}
+
+export async function handlePackSvgSymbolUse(req: FastifyRequest, res: FastifyReply) {
+	try {
+	} catch (error) {
+		res.send({ code: 400, error });
+	}
+}
+
+export async function handleRemoveIconsFromProject(req: FastifyRequest, res: FastifyReply) {
+	try {
+		const v = z.object({
+			projectId: z.string().transform((v) => parseInt(v)),
+			icons: z.array(z.string()),
+		});
+		const q = v.parse(req.body);
+		const record = await prisma.project.findUnique({ where: { id: q.projectId } });
+		if (!record) return res.send({ code: 400, error: 'project not found' });
+		const iconSet = new IconSet(JSON.parse(record?.projectIconSetJSON as string) as IconifyJSON);
+		q.icons.forEach((icon) => iconSet.remove(icon));
+		// write db & custom icons dir
+		const newIconSetJSON = JSON.stringify(iconSet.export(true));
+		await writeIconSet(record.prefix, newIconSetJSON);
+		await prisma.project.update({
+			where: { id: record.id },
+			data: { projectIconSetJSON: newIconSetJSON },
+		});
+		// update iconset cache data
+		await triggerIconSetsUpdate(1);
+		res.send({ code: 200 });
+	} catch (error) {
+		res.send({ code: 400, error });
+	}
 }
