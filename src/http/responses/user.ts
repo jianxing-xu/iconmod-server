@@ -1,15 +1,17 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../../data/prisma.js';
 import { User } from '@prisma/client';
+import { z } from 'zod';
 
-export type RegisterBody = {
-	email: string;
-	name: string;
-	pwd: string;
-};
 export async function handleRegister(req: FastifyRequest, res: FastifyReply) {
-	const body = req.body as RegisterBody;
 	try {
+		const body = z
+			.object({
+				email: z.string(),
+				name: z.string(),
+				pwd: z.string().min(6),
+			})
+			.parse(req.body);
 		const record = await prisma.user.create({
 			data: {
 				email: body.email,
@@ -28,40 +30,34 @@ export async function handleRegister(req: FastifyRequest, res: FastifyReply) {
 	}
 }
 
-export type LoginBody = {
-	email: string;
-	pwd: string;
-};
 export async function handleLogin(req: FastifyRequest, res: FastifyReply) {
 	try {
-		const body = req.body as LoginBody;
-		console.log(body.email);
+		const body = z.object({ email: z.string(), pwd: z.string() }).parse(req.body);
+
 		const user = await prisma.user.findUnique({ where: { email: body.email } });
-		console.log(user);
 		if (!user) return res.send({ code: 400, error: 'user not found' });
 		const { pwd, ...o } = user;
 		if (body.pwd !== pwd) return res.send({ code: 400, error: 'email or pwd error' });
+
 		const token = await res.jwtSign(o);
 		res.setCookie('iconmod-token', token, {
 			expires: new Date(Date.now() + 86400000),
 			path: '/',
 		});
+
 		res.send({ code: 200, data: user, token });
 	} catch (error) {
-		console.log(error);
 		res.send({ code: 400, error });
 	}
 }
+
 export function handleUserInfo(req: FastifyRequest, res: FastifyReply) {
 	const { iat, ...user } = req.user as User & { iat: number };
 	res.send({ code: 200, data: user });
 }
 
-export type SearchUserQuery = {
-	keyword: string;
-};
 export async function handleSearchUser(req: FastifyRequest, res: FastifyReply) {
-	const query = req.query as SearchUserQuery;
+	const query = z.object({ keyword: z.string().default('') }).parse(req.query);
 	if (!query.keyword.trim()) {
 		return res.send({ code: 200, data: [] });
 	}

@@ -12,22 +12,19 @@ import { writeIconSet } from '../../data/custom-icon.js';
 import { createAPIv2CollectionResponse } from './collection-v2.js';
 import { APIv2CollectionResponse } from '../../types/server/v2.js';
 
-export type AddUserToProjectBody = {
-	projectId: string;
-	userId: string;
-};
 export async function handleAddUserToProject(req: FastifyRequest, res: FastifyReply) {
 	try {
-		const query = req.query as AddUserToProjectBody;
-		const v = z.object({
-			projectId: z.string().transform((v) => parseInt(v)),
-			userId: z.string().transform((v) => parseInt(v)),
-		});
-		const r = v.parse(query);
+		const query = z
+			.object({
+				projectId: z.string().transform((v) => parseInt(v)),
+				userId: z.string().transform((v) => parseInt(v)),
+			})
+			.parse(req.query);
 
 		await prisma.projectMember.create({
-			data: { projectId: +r.projectId, userId: +r.userId, role: 0 },
+			data: { projectId: query.projectId, userId: query.userId, role: 0 },
 		});
+		res.header('cache-control', 'no-cache');
 		res.send({ code: 200 });
 	} catch (error) {
 		res.send({ code: 400, error });
@@ -76,44 +73,38 @@ export async function handleAddIcons(req: FastifyRequest, res: FastifyReply) {
 		});
 		// update iconset data
 		await triggerIconSetsUpdate(1);
+		res.header('cache-control', 'no-cache');
 		res.send({ code: 200 });
 	} catch (error) {
 		res.send({ code: 400, error });
 	}
 }
 
-export type MemberInfoQuery = {
-	projectId: number;
-};
-export async function handleMemberInfo(req: FastifyRequest<{ Querystring: MemberInfoQuery }>, res: FastifyReply) {
-	if (!req.query.projectId) {
-		return res.send({ code: 400, error: 'project id is required' });
-	}
+export async function handleMemberInfo(req: FastifyRequest, res: FastifyReply) {
 	try {
+		const query = z.object({ projectId: z.string().transform((v) => parseInt(v)) }).parse(req.query);
 		const reqUser = req.user as User;
 		const member = await prisma.projectMember.findMany({
-			where: { userId: reqUser.id, projectId: req.query.projectId },
+			where: { userId: reqUser.id, projectId: query.projectId },
 		});
+		res.header('cache-control', 'no-cache');
 		res.send({ code: 200, data: member });
 	} catch (error) {
 		return res.send({ code: 400, error });
 	}
 }
 
-export type MembersInfoQuery = {
-	projectId: string;
-};
 export async function handleMemberList(req: FastifyRequest, res: FastifyReply) {
-	const query = req.query as MembersInfoQuery;
-	if (!query.projectId) {
-		return res.send({ code: 400, error: 'project id is required' });
-	}
 	try {
-		const pid = parseInt(query.projectId, 10);
+		const query = z.object({ projectId: z.string().transform((v) => parseInt(v)) }).parse(req.query);
+		if (!query.projectId) {
+			return res.send({ code: 400, error: 'project id is required' });
+		}
 		const members = await prisma.projectMember.findMany({
-			where: { projectId: { equals: pid } },
+			where: { projectId: { equals: query.projectId } },
 			include: { user: { select: { name: true } } },
 		});
+		res.header('cache-control', 'no-cache');
 		res.send({ code: 200, data: members });
 	} catch (error) {
 		console.log(error);
@@ -121,17 +112,17 @@ export async function handleMemberList(req: FastifyRequest, res: FastifyReply) {
 	}
 }
 
-
-// todos add user, tags, logo
-export type CreateProjectBody = {
-	prefix: string;
-	name: string;
-	desc: string;
-};
 export async function handleCreateProject(req: FastifyRequest, res: FastifyReply) {
 	const reqUser = req.user as User;
 	try {
-		const { prefix, name, desc } = req.body as CreateProjectBody;
+		const v = z.object({
+			prefix: z.string(),
+			name: z.string(),
+			desc: z.string().default(''),
+			userIds: z.array(z.number()),
+			logo: z.string().default(''),
+		});
+		const { prefix, name, desc, userIds, logo } = v.parse(req.body);
 		const iconset = new IconSet({
 			prefix,
 			info: {
@@ -168,15 +159,22 @@ export async function handleCreateProject(req: FastifyRequest, res: FastifyReply
 				name,
 				desc,
 				projectIconSetJSON: JSON.stringify(iconJson),
+				logo,
 				projectMember: {
-					create: {
-						userId: reqUser.id,
-						role: 1,
+					createMany: {
+						data: [
+							{ userId: reqUser.id, role: 1 },
+							...userIds.map((id) => ({
+								userId: id,
+								role: 0,
+							})),
+						],
 					},
 				},
 			},
 		});
 
+		res.header('cache-control', 'no-cache');
 		res.send({ code: 200, data: iconJson });
 	} catch (error) {
 		res.send({ code: 400, error });
@@ -196,17 +194,15 @@ export async function queryAllProejcts(req: FastifyRequest, res: FastifyReply) {
 			},
 			select: { id: true, name: true, prefix: true, desc: true, total: true },
 		});
+		res.header('cache-control', 'no-cache');
 		res.send({ code: 200, data: projects });
 	} catch (error) {
 		res.send({ code: 400, error });
 	}
 }
 
-export type ProjectInfoQuery = {
-	prefix: string;
-};
 export async function queryProjectInfo(req: FastifyRequest, res: FastifyReply) {
-	const query = req.query as ProjectInfoQuery;
+	const query = z.object({ prefix: z.string() }).parse(req.query);
 	const record = await prisma.project.findUnique({
 		where: { prefix: query.prefix },
 		select: {
@@ -221,25 +217,24 @@ export async function queryProjectInfo(req: FastifyRequest, res: FastifyReply) {
 	if (iconSet === 404) {
 		return res.send({ code: 400, error: 'iconset returned 404' });
 	}
+	res.header('cache-control', 'no-cache');
 	res.send({ code: 200, data: { ...record, ...((iconSet || {}) as APIv2CollectionResponse) } });
 }
 
-// todos
-export type PackSvgJsonQuery = {
-	projectId: number;
-};
 export async function handlePackSvgJson(req: FastifyRequest, res: FastifyReply) {
 	try {
-		const query = req.query as PackSvgJsonQuery;
-		const v = z.string().transform((v) => parseInt(v));
-		const pid = v.parse(query.projectId);
-		const record = await prisma.project.findUnique({ where: { id: pid }, select: { projectIconSetJSON: true } });
+		const query = z.object({ projectId: z.string().transform((v) => parseInt(v)) }).parse(req.query);
+		const record = await prisma.project.findUnique({
+			where: { id: query.projectId },
+			select: { projectIconSetJSON: true },
+		});
+		res.header('cache-control', 'no-cache');
 		return { code: 200, data: record };
 	} catch (error) {
 		res.send({ code: 400, error });
 	}
 }
-
+// TODO: 返回 SvgSymbolUse 格式字符串
 export async function handlePackSvgSymbolUse(req: FastifyRequest, res: FastifyReply) {
 	try {
 	} catch (error) {
@@ -249,15 +244,19 @@ export async function handlePackSvgSymbolUse(req: FastifyRequest, res: FastifyRe
 
 export async function handleRemoveIconsFromProject(req: FastifyRequest, res: FastifyReply) {
 	try {
-		const v = z.object({
-			projectId: z.string().transform((v) => parseInt(v)),
-			icons: z.array(z.string()),
-		});
-		const q = v.parse(req.body);
+		const q = z
+			.object({
+				projectId: z.string().transform((v) => parseInt(v)),
+				icons: z.array(z.string()),
+			})
+			.parse(req.body);
+
 		const record = await prisma.project.findUnique({ where: { id: q.projectId } });
 		if (!record) return res.send({ code: 400, error: 'project not found' });
+		// parse to IconSet for add icons
 		const iconSet = new IconSet(JSON.parse(record?.projectIconSetJSON as string) as IconifyJSON);
 		q.icons.forEach((icon) => iconSet.remove(icon));
+
 		// write db & custom icons dir
 		const newIconSetJSON = JSON.stringify(iconSet.export(true));
 		await writeIconSet(record.prefix, newIconSetJSON);
@@ -267,6 +266,8 @@ export async function handleRemoveIconsFromProject(req: FastifyRequest, res: Fas
 		});
 		// update iconset cache data
 		await triggerIconSetsUpdate(1);
+
+		res.header('cache-control', 'no-cache');
 		res.send({ code: 200 });
 	} catch (error) {
 		res.send({ code: 400, error });

@@ -30,6 +30,7 @@ model ProjectMember {
 model Project {
   id                 Int             @id @default(autoincrement())
   name               String
+  logo               String?
   prefix             String          @unique // same as iconset prefix
   desc               String          @default("project desc")
   total              Int             @default(0)

@@ -15,7 +15,7 @@ import { generateUpdateResponse } from './responses/update.js';
 import { initVersionResponse, versionResponse } from './responses/version.js';
 import { generateIconsStyleResponse } from './responses/css.js';
 import { handleJSONResponse } from './helpers/send.js';
-import { handleLogin, handleRegister, handleSearchUser, handleUserInfo, SearchUserQuery } from './responses/user.js';
+import { handleLogin, handleRegister, handleSearchUser, handleUserInfo } from './responses/user.js';
 import {
 	handleAddIcons,
 	handleAddUserToProject,
@@ -81,7 +81,7 @@ export async function startHTTPServer() {
 		'/search',
 		'/list-icons',
 		'/keywords',
-		'/project/packsvg'
+		'/project/packsvg',
 	];
 	const ignoreSuffix = ['.svg', '.css', '.json', '.js'];
 	server.addHook('onRequest', async (request, reply) => {
@@ -122,7 +122,7 @@ export async function startHTTPServer() {
 		runWhenLoaded(() => handleUserInfo(req, res));
 	});
 	// search user
-	server.get('/user/search', (req: FastifyRequest<{ Querystring: SearchUserQuery }>, res) => {
+	server.get('/user/search', (req: FastifyRequest, res) => {
 		runWhenLoaded(() => handleSearchUser(req, res));
 	});
 	/** project */
