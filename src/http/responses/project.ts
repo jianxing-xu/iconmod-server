@@ -14,16 +14,22 @@ import { APIv2CollectionResponse } from '../../types/server/v2.js';
 
 export async function handleAddUserToProject(req: FastifyRequest, res: FastifyReply) {
 	try {
-		const query = z
-			.object({
-				projectId: z.string().transform((v) => parseInt(v)),
-				userId: z.string().transform((v) => parseInt(v)),
-			})
-			.parse(req.query);
+		const query = z.object({ projectId: z.number(), userId: z.number() }).parse(req.body);
 
 		await prisma.projectMember.create({
 			data: { projectId: query.projectId, userId: query.userId, role: 0 },
 		});
+		res.header('cache-control', 'no-cache');
+		res.send({ code: 200 });
+	} catch (error) {
+		res.send({ code: 400, error });
+	}
+}
+export async function handleDeleteUserOfProject(req: FastifyRequest, res: FastifyReply) {
+	try {
+		const query = z.object({ projectId: z.number(), userId: z.number() }).parse(req.body);
+
+		await prisma.projectMember.deleteMany({ where: { userId: query.userId, projectId: query.projectId } });
 		res.header('cache-control', 'no-cache');
 		res.send({ code: 200 });
 	} catch (error) {
@@ -140,6 +146,8 @@ export async function handleCreateProject(req: FastifyRequest, res: FastifyReply
 				palette: false,
 				category: 'PROJECT',
 			},
+			width: 24,
+			height: 24,
 			icons: {},
 		});
 

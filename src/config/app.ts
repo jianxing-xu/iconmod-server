@@ -63,7 +63,7 @@ export const httpHeaders: string[] = [
 	'Access-Control-Max-Age: 86400',
 	'Cross-Origin-Resource-Policy: cross-origin',
 	// Cache
-	'Cache-Control: public, max-age=604800, min-refresh=604800, immutable',
+	// 'Cache-Control: public, max-age=604800, min-refresh=604800, immutable',
 ];
 
 /**

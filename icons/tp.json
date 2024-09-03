@@ -1,0 +1,23 @@
+{
+  "prefix": "tp",
+  "info": {
+    "name": "TestProject",
+    "total": 0,
+    "version": "0.0.1",
+    "author": {
+      "name": "jack",
+      "url": "/"
+    },
+    "license": {
+      "title": "MIT",
+      "spdx": "MIT"
+    },
+    "height": 24,
+    "displayHeight": 24,
+    "category": "PROJECT",
+    "palette": false
+  },
+  "icons": {},
+  "width": 24,
+  "height": 24
+}

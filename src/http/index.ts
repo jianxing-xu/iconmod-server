@@ -20,6 +20,7 @@ import {
 	handleAddIcons,
 	handleAddUserToProject,
 	handleCreateProject,
+	handleDeleteUserOfProject,
 	handleMemberList,
 	handlePackSvgJson,
 	queryAllProejcts,
@@ -129,6 +130,9 @@ export async function startHTTPServer() {
 	// add user to project
 	server.post('/project/adduser', (req, res) => {
 		runWhenLoaded(() => handleAddUserToProject(req, res));
+	});
+	server.post('/project/deluser', (req, res) => {
+		runWhenLoaded(() => handleDeleteUserOfProject(req, res));
 	});
 	// add to some icon to owner project
 	server.post('/project/addicons', (req, res) => {

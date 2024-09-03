@@ -66,6 +66,7 @@ export async function handleSearchUser(req: FastifyRequest, res: FastifyReply) {
 			where: { name: { contains: query.keyword.trim() } },
 			select: { id: true, name: true, email: true },
 		});
+		res.header('cache-control', 'no-cache')
 		res.send({ code: 200, data: records });
 	} catch (error) {
 		res.send({ code: 200, error });
