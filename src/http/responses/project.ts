@@ -2,12 +2,13 @@ import { Project, User } from '@prisma/client';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../../data/prisma.js';
 import { IconSet } from '@iconify/tools';
+import { convertParsedSVG, parseSVGContent } from '@iconify/utils';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { fileExists } from '../../misc/files.js';
 import { triggerIconSetsUpdate } from '../../data/icon-sets.js';
 import z from 'zod';
-import { IconifyJSON } from '@iconify/types';
+import { IconifyIcon, IconifyJSON } from '@iconify/types';
 import { writeIconSet } from '../../data/custom-icon.js';
 import { createAPIv2CollectionResponse } from './collection-v2.js';
 import { APIv2CollectionResponse } from '../../types/server/v2.js';
@@ -40,22 +41,18 @@ export async function handleAddIcons(req: FastifyRequest, res: FastifyReply) {
 	try {
 		const v = z.object({
 			projectId: z.number(),
-			// icon data
-			icons: z.record(
-				z.object({
-					body: z.string(),
-					// view box values
-					left: z.number().optional(),
-					top: z.number().optional(),
-					width: z.number(),
-					height: z.number(),
-					// transform
-					hFlip: z.boolean().optional(),
-					vFlip: z.boolean().optional(),
-				})
-			),
+			icons: z.array(z.object({ name: z.string(), svg: z.string() })),
 		});
 		const { projectId, icons } = v.parse(req.body);
+		const iconMap = icons.reduce((pre, it) => {
+			const parsed = parseSVGContent(it.svg);
+			if (parsed) {
+				const iconifyIcon = convertParsedSVG(parsed);
+				if (iconifyIcon) pre[it.name] = iconifyIcon;
+			}
+			return pre;
+		}, {} as Record<string, IconifyIcon>);
+
 		const project = await prisma.project.findUnique({ where: { id: projectId } });
 		if (!project) {
 			return res.send({ code: 400, error: 'project is not found' });
@@ -63,23 +60,27 @@ export async function handleAddIcons(req: FastifyRequest, res: FastifyReply) {
 		// load icon set from db
 		const iconSet = new IconSet(JSON.parse(project?.projectIconSetJSON as string) as IconifyJSON);
 		// add icons to icon set
-		for (const iconName in icons) {
+		for (const iconName in iconMap) {
 			if (iconSet.exists(iconName)) {
 				continue;
 			}
-			iconSet.setIcon(iconName, icons[iconName]);
+			iconSet.setIcon(iconName, iconMap[iconName]);
 		}
 		// update to db and icons dir
 		const newIconSetJSON = JSON.stringify(iconSet.export(true));
 		await writeIconSet(project.prefix, newIconSetJSON);
 		await prisma.project.update({
 			where: { id: projectId },
-			data: { projectIconSetJSON: newIconSetJSON },
+			data: {
+				projectIconSetJSON: newIconSetJSON,
+				total: iconSet.count(),
+			},
 		});
 		// update iconset data
 		await triggerIconSetsUpdate(1);
 		res.send({ code: 200 });
 	} catch (error) {
+		console.log(error);
 		res.send({ code: 400, error });
 	}
 }
@@ -237,6 +238,7 @@ export async function handlePackSvgJson(req: FastifyRequest, res: FastifyReply) 
 // TODO: 返回 SvgSymbolUse 格式字符串
 export async function handlePackSvgSymbolUse(req: FastifyRequest, res: FastifyReply) {
 	try {
+		res.send('comming soon')
 	} catch (error) {
 		res.send({ code: 400, error });
 	}
