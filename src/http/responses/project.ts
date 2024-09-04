@@ -238,7 +238,7 @@ export async function handlePackSvgJson(req: FastifyRequest, res: FastifyReply) 
 // TODO: 返回 SvgSymbolUse 格式字符串
 export async function handlePackSvgSymbolUse(req: FastifyRequest, res: FastifyReply) {
 	try {
-		res.send('comming soon')
+		res.send('comming soon');
 	} catch (error) {
 		res.send({ code: 400, error });
 	}
@@ -248,7 +248,7 @@ export async function handleRemoveIconsFromProject(req: FastifyRequest, res: Fas
 	try {
 		const q = z
 			.object({
-				projectId: z.string().transform((v) => parseInt(v)),
+				projectId: z.number(),
 				icons: z.array(z.string()),
 			})
 			.parse(req.body);
@@ -264,7 +264,7 @@ export async function handleRemoveIconsFromProject(req: FastifyRequest, res: Fas
 		await writeIconSet(record.prefix, newIconSetJSON);
 		await prisma.project.update({
 			where: { id: record.id },
-			data: { projectIconSetJSON: newIconSetJSON },
+			data: { projectIconSetJSON: newIconSetJSON, total: iconSet.count() },
 		});
 		// update iconset cache data
 		await triggerIconSetsUpdate(1);

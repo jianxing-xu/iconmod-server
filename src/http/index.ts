@@ -23,6 +23,7 @@ import {
 	handleDeleteUserOfProject,
 	handleMemberList,
 	handlePackSvgJson,
+	handleRemoveIconsFromProject,
 	queryAllProejcts,
 	queryProjectInfo,
 } from './responses/project.js';
@@ -137,6 +138,10 @@ export async function startHTTPServer() {
 	// add to some icon to owner project
 	server.post('/project/addicons', (req, res) => {
 		runWhenLoaded(() => handleAddIcons(req, res));
+	});
+	// remove icons from project
+	server.post('/project/removeicons', (req, res) => {
+		runWhenLoaded(() => handleRemoveIconsFromProject(req, res));
 	});
 	// project members
 	server.get('/project/members', (req, res) => {
