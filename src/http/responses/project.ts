@@ -19,18 +19,17 @@ export async function handleAddUserToProject(req: FastifyRequest, res: FastifyRe
 		await prisma.projectMember.create({
 			data: { projectId: query.projectId, userId: query.userId, role: 0 },
 		});
-		res.header('cache-control', 'no-cache');
 		res.send({ code: 200 });
 	} catch (error) {
 		res.send({ code: 400, error });
 	}
 }
+
 export async function handleDeleteUserOfProject(req: FastifyRequest, res: FastifyReply) {
 	try {
 		const query = z.object({ projectId: z.number(), userId: z.number() }).parse(req.body);
 
 		await prisma.projectMember.deleteMany({ where: { userId: query.userId, projectId: query.projectId } });
-		res.header('cache-control', 'no-cache');
 		res.send({ code: 200 });
 	} catch (error) {
 		res.send({ code: 400, error });
@@ -79,7 +78,6 @@ export async function handleAddIcons(req: FastifyRequest, res: FastifyReply) {
 		});
 		// update iconset data
 		await triggerIconSetsUpdate(1);
-		res.header('cache-control', 'no-cache');
 		res.send({ code: 200 });
 	} catch (error) {
 		res.send({ code: 400, error });
@@ -93,7 +91,6 @@ export async function handleMemberInfo(req: FastifyRequest, res: FastifyReply) {
 		const member = await prisma.projectMember.findMany({
 			where: { userId: reqUser.id, projectId: query.projectId },
 		});
-		res.header('cache-control', 'no-cache');
 		res.send({ code: 200, data: member });
 	} catch (error) {
 		return res.send({ code: 400, error });
@@ -110,7 +107,6 @@ export async function handleMemberList(req: FastifyRequest, res: FastifyReply) {
 			where: { projectId: { equals: query.projectId } },
 			include: { user: { select: { name: true } } },
 		});
-		res.header('cache-control', 'no-cache');
 		res.send({ code: 200, data: members });
 	} catch (error) {
 		console.log(error);
@@ -182,7 +178,6 @@ export async function handleCreateProject(req: FastifyRequest, res: FastifyReply
 			},
 		});
 
-		res.header('cache-control', 'no-cache');
 		res.send({ code: 200, data: iconJson });
 	} catch (error) {
 		res.send({ code: 400, error });
@@ -202,7 +197,6 @@ export async function queryAllProejcts(req: FastifyRequest, res: FastifyReply) {
 			},
 			select: { id: true, name: true, prefix: true, desc: true, total: true },
 		});
-		res.header('cache-control', 'no-cache');
 		res.send({ code: 200, data: projects });
 	} catch (error) {
 		res.send({ code: 400, error });
@@ -225,7 +219,6 @@ export async function queryProjectInfo(req: FastifyRequest, res: FastifyReply) {
 	if (iconSet === 404) {
 		return res.send({ code: 400, error: 'iconset returned 404' });
 	}
-	res.header('cache-control', 'no-cache');
 	res.send({ code: 200, data: { ...record, ...((iconSet || {}) as APIv2CollectionResponse) } });
 }
 
@@ -236,7 +229,6 @@ export async function handlePackSvgJson(req: FastifyRequest, res: FastifyReply) 
 			where: { id: query.projectId },
 			select: { projectIconSetJSON: true },
 		});
-		res.header('cache-control', 'no-cache');
 		return { code: 200, data: record };
 	} catch (error) {
 		res.send({ code: 400, error });
@@ -275,7 +267,6 @@ export async function handleRemoveIconsFromProject(req: FastifyRequest, res: Fas
 		// update iconset cache data
 		await triggerIconSetsUpdate(1);
 
-		res.header('cache-control', 'no-cache');
 		res.send({ code: 200 });
 	} catch (error) {
 		res.send({ code: 400, error });

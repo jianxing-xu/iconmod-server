@@ -173,6 +173,7 @@ export async function startHTTPServer() {
 	// SVG: /prefix:name.svg, /prefix-name.svg
 	server.get('/:name(' + iconNameRouteRegEx + ').svg', (req, res) => {
 		const name = splitIconName((req.params as NameParams).name);
+		res.header('Cache-Control', 'public, max-age=3600');
 		if (name) {
 			runWhenLoaded(() => {
 				generateSVGResponse(name.prefix, name.name, req.query, res);
@@ -184,11 +185,13 @@ export async function startHTTPServer() {
 
 	// Icons data: /prefix/icons.json, /prefix.json
 	server.get('/:prefix(' + iconNameRoutePartialRegEx + ')/icons.json', (req, res) => {
+		res.header('Cache-Control', 'public, max-age=3600');
 		runWhenLoaded(() => {
 			handleIconsDataResponse((req.params as PrefixParams).prefix, false, req.query, res);
 		});
 	});
 	server.get('/:prefix(' + iconNameRoutePartialRegEx + ').json', (req, res) => {
+		res.header('Cache-Control', 'public, max-age=3600');
 		runWhenLoaded(() => {
 			handleIconsDataResponse((req.params as PrefixParams).prefix, false, req.query, res);
 		});
@@ -196,6 +199,7 @@ export async function startHTTPServer() {
 
 	// Stylesheet: /prefix.css
 	server.get('/:prefix(' + iconNameRoutePartialRegEx + ').css', (req, res) => {
+		res.header('Cache-Control', 'public, max-age=3600');
 		runWhenLoaded(() => {
 			generateIconsStyleResponse((req.params as PrefixParams).prefix, req.query, res);
 		});
@@ -203,11 +207,13 @@ export async function startHTTPServer() {
 
 	// Icons data: /prefix/icons.js, /prefix.js
 	server.get('/:prefix(' + iconNameRoutePartialRegEx + ')/icons.js', (req, res) => {
+		res.header('Cache-Control', 'public, max-age=3600');
 		runWhenLoaded(() => {
 			handleIconsDataResponse((req.params as PrefixParams).prefix, true, req.query, res);
 		});
 	});
 	server.get('/:prefix(' + iconNameRoutePartialRegEx + ').js', (req, res) => {
+		res.header('Cache-Control', 'public, max-age=3600');
 		runWhenLoaded(() => {
 			handleIconsDataResponse((req.params as PrefixParams).prefix, true, req.query, res);
 		});
