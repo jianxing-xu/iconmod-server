@@ -29,6 +29,8 @@ import {
 } from './responses/project.js';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
+import { cleanupSVG, deOptimisePaths, parseColors, runSVGO, SVG } from '@iconify/tools';
+import { z } from 'zod';
 
 /**
  * Start HTTP server
@@ -281,6 +283,32 @@ export async function startHTTPServer() {
 	});
 	server.post('/update', (req, res) => {
 		generateUpdateResponse(req.query, res);
+	});
+
+	// SVG process function
+	server.post('/clearSVG', async (req, res) => {
+		try {
+			const { content, dropColor } = z
+				.object({ dropColor: z.boolean().default(true), content: z.string() })
+				.parse(req.body);
+			const svg = new SVG(content);
+			cleanupSVG(svg);
+			runSVGO(svg);
+			deOptimisePaths(svg);
+			if (dropColor) {
+				await parseColors(svg, {
+					defaultColor: 'currentColor',
+					callback: (attr, colorStr) => {
+						if (['stroke', 'fill'].includes(attr)) return 'currentColor';
+						return colorStr;
+					},
+				});
+			}
+			res.send({ code: 200, data: svg.toMinifiedString() });
+		} catch (error) {
+			console.log(error);
+			res.send({ code: 400, error });
+		}
 	});
 
 	// Options
