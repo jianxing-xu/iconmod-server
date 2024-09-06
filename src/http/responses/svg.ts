@@ -7,6 +7,8 @@ import { defaultIconCustomisations, IconifyIconCustomisations } from '@iconify/u
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getStoredIconData } from '../../data/icon-set/utils/get-icon.js';
 import { iconSets } from '../../data/icon-sets.js';
+import { z } from 'zod';
+import { cleanupSVG, deOptimisePaths, parseColors, runSVGO, SVG } from '@iconify/tools';
 
 /**
  * Generate SVG
@@ -85,4 +87,48 @@ export function generateSVGResponse(prefix: string, name: string, query: Fastify
 		}
 		res.type('image/svg+xml; charset=utf-8').send(html);
 	});
+}
+
+export async function handleClearSvgs(req: FastifyRequest, res: FastifyReply) {
+	try {
+		const { svgs, dropColor } = z
+			.object({
+				dropColor: z.boolean().default(true),
+				svgs: z.array(
+					z.object({
+						id: z.number(),
+						name: z.string(),
+						svg: z.string(),
+					})
+				),
+			})
+			.parse(req.body);
+		const resutls = [];
+		const errors = [];
+		for (let index = 0; index < svgs.length; index++) {
+			try {
+				const it = svgs[index];
+				const svg = new SVG(it.svg);
+				cleanupSVG(svg);
+				runSVGO(svg, {});
+				deOptimisePaths(svg);
+				if (dropColor) {
+					await parseColors(svg, {
+						defaultColor: 'currentColor',
+						callback: (attr, colorStr) => {
+							if (['stroke', 'fill'].includes(attr)) return 'currentColor';
+							return colorStr;
+						},
+					});
+				}
+				resutls.push({ name: it.name, svg: svg.toMinifiedString() });
+			} catch (error: any) {
+				errors.push(error?.message || JSON.stringify(error));
+			}
+		}
+		res.send({ code: 200, data: resutls, errors });
+	} catch (error) {
+		console.log(error);
+		res.send({ code: 400, error });
+	}
 }

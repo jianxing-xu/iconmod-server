@@ -1,4 +1,4 @@
-import { Project, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../../data/prisma.js';
 import { IconSet } from '@iconify/tools';
@@ -272,5 +272,55 @@ export async function handleRemoveIconsFromProject(req: FastifyRequest, res: Fas
 		res.send({ code: 200 });
 	} catch (error) {
 		res.send({ code: 400, error });
+	}
+}
+
+export async function handleUploadIconsToProject(req: FastifyRequest, res: FastifyReply) {
+	try {
+		const { projectId, icons } = z
+			.object({
+				projectId: z.number(),
+				icons: z.array(z.object({ name: z.string(), svg: z.string() })),
+			})
+			.parse(req.body);
+		const record = await prisma.project.findUnique({ where: { id: projectId } });
+		if (!record) {
+			throw new Error('project not found');
+		}
+		const iconSet = new IconSet(JSON.parse(record?.projectIconSetJSON as string) as IconifyJSON);
+		const sameNames = icons.reduce((pre, ic) => {
+			if (iconSet.exists(ic.name)) {
+				pre[ic.name] = 1;
+			}
+			return pre;
+		}, {} as Record<string, 1>);
+		if (Object.keys(sameNames).length > 0) {
+			return res.send({ code: 200, data: { hasSame: Object.keys(sameNames).length, names: sameNames } });
+		}
+		// parse and set
+		icons.map((it) => {
+			const parsed = parseSVGContent(it.svg);
+			if (parsed) {
+				const iconifyIcon = convertParsedSVG(parsed);
+				if (iconifyIcon) {
+					iconSet.setIcon(it.name, iconifyIcon);
+				}
+			}
+		}, {} as Record<string, IconifyIcon>);
+		// update to db and icons dir
+		const newIconSetJSON = JSON.stringify(iconSet.export(true));
+		await writeIconSet(record.prefix, newIconSetJSON);
+		await prisma.project.update({
+			where: { id: projectId },
+			data: {
+				projectIconSetJSON: newIconSetJSON,
+				total: iconSet.count(),
+			},
+		});
+		// update iconset data
+		await triggerIconSetsUpdate(1);
+		res.send({ code: 200 });
+	} catch (error: any) {
+		res.send({ code: 400, error: error?.message || JSON.stringify(error) });
 	}
 }

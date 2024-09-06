@@ -10,7 +10,7 @@ import { handleIconsDataResponse } from './helpers/send-icons.js';
 import { createKeywordsResponse } from './responses/keywords.js';
 import { createLastModifiedResponse } from './responses/modified.js';
 import { createAPIv2SearchResponse } from './responses/search.js';
-import { generateSVGResponse } from './responses/svg.js';
+import { generateSVGResponse, handleClearSvgs } from './responses/svg.js';
 import { generateUpdateResponse } from './responses/update.js';
 import { initVersionResponse, versionResponse } from './responses/version.js';
 import { generateIconsStyleResponse } from './responses/css.js';
@@ -23,7 +23,9 @@ import {
 	handleDeleteUserOfProject,
 	handleMemberList,
 	handlePackSvgJson,
+	handlePackSvgSymbolUse,
 	handleRemoveIconsFromProject,
+	handleUploadIconsToProject,
 	queryAllProejcts,
 	queryProjectInfo,
 } from './responses/project.js';
@@ -114,55 +116,30 @@ export async function startHTTPServer() {
 
 	/** user */
 	// login
-	server.post('/user/login', (req, res) => {
-		runWhenLoaded(() => handleLogin(req, res));
-	});
+	server.post('/user/login', (req, res) => runWhenLoaded(() => handleLogin(req, res)));
 	// register
-	server.post('/user/register', (req, res) => {
-		runWhenLoaded(() => handleRegister(req, res));
-	});
+	server.post('/user/register', (req, res) => runWhenLoaded(() => handleRegister(req, res)));
 	// user
-	server.get('/user/info', (req, res) => {
-		runWhenLoaded(() => handleUserInfo(req, res));
-	});
+	server.get('/user/info', (req, res) => runWhenLoaded(() => handleUserInfo(req, res)));
 	// search user
-	server.get('/user/search', (req: FastifyRequest, res) => {
-		runWhenLoaded(() => handleSearchUser(req, res));
-	});
+	server.get('/user/search', (req, res) => runWhenLoaded(() => handleSearchUser(req, res)));
 	/** project */
 	// add user to project
-	server.post('/project/adduser', (req, res) => {
-		runWhenLoaded(() => handleAddUserToProject(req, res));
-	});
-	server.post('/project/deluser', (req, res) => {
-		runWhenLoaded(() => handleDeleteUserOfProject(req, res));
-	});
+	server.post('/project/adduser', (req, res) => runWhenLoaded(() => handleAddUserToProject(req, res)));
+	server.post('/project/deluser', (req, res) => runWhenLoaded(() => handleDeleteUserOfProject(req, res)));
 	// add to some icon to owner project
-	server.post('/project/addicons', (req, res) => {
-		runWhenLoaded(() => handleAddIcons(req, res));
-	});
+	server.post('/project/addicons', (req, res) => runWhenLoaded(() => handleAddIcons(req, res)));
+	server.post('/project/upload', (req, res) => runWhenLoaded(() => handleUploadIconsToProject(req, res)));
 	// remove icons from project
-	server.post('/project/removeicons', (req, res) => {
-		runWhenLoaded(() => handleRemoveIconsFromProject(req, res));
-	});
+	server.post('/project/removeicons', (req, res) => runWhenLoaded(() => handleRemoveIconsFromProject(req, res)));
 	// project members
-	server.get('/project/members', (req, res) => {
-		runWhenLoaded(() => handleMemberList(req, res));
-	});
+	server.get('/project/members', (req, res) => runWhenLoaded(() => handleMemberList(req, res)));
 	// create project
-	server.post('/project/create', (req, res) => {
-		runWhenLoaded(() => handleCreateProject(req, res));
-	});
-	server.get('/project/list', (req, res) => {
-		runWhenLoaded(() => queryAllProejcts(req, res));
-	});
-	server.get('/project/info', (req, res) => {
-		runWhenLoaded(() => queryProjectInfo(req, res));
-	});
+	server.post('/project/create', (req, res) => runWhenLoaded(() => handleCreateProject(req, res)));
+	server.get('/project/list', (req, res) => runWhenLoaded(() => queryAllProejcts(req, res)));
+	server.get('/project/info', (req, res) => runWhenLoaded(() => queryProjectInfo(req, res)));
 	server.get('/project/packsvg', (req, res) => handlePackSvgJson(req, res));
-	server.get('/project/removeIcons', (req, res) => {
-		runWhenLoaded(() => handlePackSvgJson(req, res));
-	});
+	server.get('/project/packsvgSymbol', (req, res) => runWhenLoaded(() => handlePackSvgSymbolUse(req, res)));
 
 	// SVG: /prefix/icon.svg, /prefix:name.svg, /prefix-name.svg
 	server.get(
@@ -286,30 +263,7 @@ export async function startHTTPServer() {
 	});
 
 	// SVG process function
-	server.post('/clearSVG', async (req, res) => {
-		try {
-			const { content, dropColor } = z
-				.object({ dropColor: z.boolean().default(true), content: z.string() })
-				.parse(req.body);
-			const svg = new SVG(content);
-			cleanupSVG(svg);
-			runSVGO(svg);
-			deOptimisePaths(svg);
-			if (dropColor) {
-				await parseColors(svg, {
-					defaultColor: 'currentColor',
-					callback: (attr, colorStr) => {
-						if (['stroke', 'fill'].includes(attr)) return 'currentColor';
-						return colorStr;
-					},
-				});
-			}
-			res.send({ code: 200, data: svg.toMinifiedString() });
-		} catch (error) {
-			console.log(error);
-			res.send({ code: 400, error });
-		}
-	});
+	server.post('/clearSVGs', async (req, res) => handleClearSvgs(req, res));
 
 	// Options
 	server.options('/*', (req, res) => {
