@@ -24,6 +24,7 @@
 		"start": "node --expose-gc lib/index.js",
 		"start:watch": "node --expose-gc --watch lib/index.js",
 		"mgr": "npx prisma migrate dev",
+		"psm": "npx prisma generate && npx prisma db push",
 		"docker:build": "./docker.sh",
 		"docker:start": "docker run -d -p 3000:3000 iconify/api",
 		"docker:stop": "docker ps -q --filter ancestor=iconify/api | xargs -r docker stop",

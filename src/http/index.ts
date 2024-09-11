@@ -31,8 +31,6 @@ import {
 } from './responses/project.js';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
-import { cleanupSVG, deOptimisePaths, parseColors, runSVGO, SVG } from '@iconify/tools';
-import { z } from 'zod';
 
 /**
  * Start HTTP server
