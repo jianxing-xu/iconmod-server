@@ -7,7 +7,7 @@
 # To test the docker image a command like this can be used:
 #docker run --rm -p 3123:3000 --name iconify-api -v $(realpath "../iconify-cache"):/data/iconify-api/cache -v $(realpath "../iconify-config"):/data/iconify-api/src/config iconify/api:latest
 #docker run --rm -p 3123:3000 --name iconify-api -v /absolute/path/iconify-cache:/data/iconify-api/cache -v /absolute/path/iconify-config:/data/iconify-api/src/config iconify/api:latest
-DOCKER_REPO=iconify/api
+DOCKER_REPO=iconmod-server
 ICONIFY_API_REPO=$(realpath "./")
 BUILD_SOURCE=$(realpath "./")
 SHARED_DIR=$BUILD_SOURCE/../shared
@@ -28,12 +28,14 @@ echo "Iconify API version: ${ICONIFY_API_VERSION}"
 
 
 time docker build --rm=false \
+    --no-cache \
     --build-arg ARCH=$ARCH \
     --build-arg ICONIFY_API_VERSION=${ICONIFY_API_VERSION} \
     --build-arg BUILD_DATE="$(date +"%Y-%m-%dT%H:%M:%SZ")" \
     --build-arg TAG_SUFFIX=default \
 	--build-arg SRC_PATH="$SRC_PATH" \
     --file $DOCKERFILE \
-    --tag ${DOCKER_REPO}:latest --tag ${DOCKER_REPO}:${ICONIFY_API_VERSION} $BUILD_SOURCE
+    --tag ${DOCKER_REPO}:latest $BUILD_SOURCE
+    # --tag ${DOCKER_REPO}:latest --tag ${DOCKER_REPO}:${ICONIFY_API_VERSION} $BUILD_SOURCE
 
 rm -fR $BUILD_SOURCE/tmp

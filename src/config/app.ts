@@ -50,6 +50,9 @@ export const appConfig: AppConfig = {
 	// Enables filtering icons by style: 'fill' or 'stroke'
 	// Works only if search engine is enabled
 	allowFilterIconsByStyle: true,
+
+	// Custom icons dir
+	customIconDir: 'data_volume/icons'
 };
 
 /**

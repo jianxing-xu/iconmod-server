@@ -1,4 +1,5 @@
-node_modules
-.github
-cache
-lib
+node_modules/
+.github/
+cache/
+lib/
+data_volume/

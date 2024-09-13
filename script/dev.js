@@ -1,1 +1,0 @@
-const tsc = require('typescript');

@@ -3,6 +3,7 @@ import { createJSONDirectoryImporter } from '../importers/full/directory-json.js
 import { directoryExists } from '../misc/files.js';
 import type { Importer } from '../types/importers.js';
 import type { ImportedData } from '../types/importers/common.js';
+import { appConfig } from './app.js';
 import { fullPackageImporter } from './importers/full-package.js';
 import { splitPackagesImporter } from './importers/split-packages.js';
 
@@ -36,9 +37,9 @@ export async function getImporters(): Promise<Importer[]> {
 	/**
 	 * Add custom icons from `icons` directory
 	 */
-	if (await directoryExists('icons')) {
+	if (await directoryExists(appConfig.customIconDir)) {
 		importers.push(
-			createJSONDirectoryImporter(new DirectoryDownloader<ImportedData>('icons'), {
+			createJSONDirectoryImporter(new DirectoryDownloader<ImportedData>(appConfig.customIconDir), {
 				// Skip icon sets with mismatched prefix
 				ignoreInvalidPrefix: false,
 

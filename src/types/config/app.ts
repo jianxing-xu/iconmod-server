@@ -47,4 +47,6 @@ export interface AppConfig {
 	// Enables filtering icons by style: 'fill' or 'stroke'
 	// Works only if search engine is enabled
 	allowFilterIconsByStyle: boolean;
+
+	customIconDir: string
 }

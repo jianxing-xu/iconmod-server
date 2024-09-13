@@ -3,12 +3,14 @@ FROM node:18-alpine AS iconify-api-install
 
 # Set work directory
 WORKDIR /app
-COPY ["./", "./"]
+COPY [".", "./"]
 
 # Build API
 RUN npm install -g yarn --force
 RUN yarn
-RUN yarn run psm
+# generate prisma client code
+RUN yarn run p:gen
+# run ts build
 RUN yarn run build
 
 
@@ -41,4 +43,5 @@ EXPOSE 3030
 # Add a healthcheck (default every 30 secs)
 HEALTHCHECK CMD curl http://localhost:3030/ || exit 1
 
-CMD ["npm", "run", "start"]
+CMD sh ./script/data_volume_init.sh && \
+    npm run start
