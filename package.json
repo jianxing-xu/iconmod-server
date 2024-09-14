@@ -16,7 +16,7 @@
 		"node": ">=16.15.0"
 	},
 	"prisma": {
-		"seed": "node prisma/seed.mjs"
+		"seed": "node prisma/seed.cjs"
 	},
 	"scripts": {
 		"s": "yarn build && yarn start",

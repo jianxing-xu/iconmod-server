@@ -12,9 +12,9 @@ if [ -f "$PRISMA_DB" ] && [ -d "$ICONS_PATH" ]; then
 else
     echo "start init prisma."
     # create db
-    npx prisma migrate dev
-    # create seed data
-    npx prisma db seed
+    npx prisma migrate dev --name "init"
+    # # create seed data
+    # npx prisma db seed
     # create `icons` dir 
     mkdir -p /app/data_volume/icons
 
