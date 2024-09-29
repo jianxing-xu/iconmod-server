@@ -12,6 +12,7 @@ import { IconifyIcon, IconifyJSON } from '@iconify/types';
 import { writeIconSet } from '../../data/custom-icon.js';
 import { createAPIv2CollectionResponse } from './collection-v2.js';
 import { APIv2CollectionResponse } from '../../types/server/v2.js';
+import { packSVGSprite } from '../../utils.js';
 
 export async function handleAddUserToProject(req: FastifyRequest, res: FastifyReply) {
 	try {
@@ -235,11 +236,20 @@ export async function handlePackSvgJson(req: FastifyRequest, res: FastifyReply) 
 		res.send({ code: 400, error });
 	}
 }
-// TODO: 返回 SvgSymbolUse 格式字符串
+
 export async function handlePackSvgSymbolUse(req: FastifyRequest, res: FastifyReply) {
 	try {
-		res.send('comming soon');
+		const query = z.object({ projectId: z.string().transform((v) => parseInt(v)) }).parse(req.query);
+		const record = await prisma.project.findUnique({
+			where: { id: query.projectId },
+			select: { projectIconSetJSON: true },
+		});
+		if (!record) throw new Error('record not found');
+		const iconSet = new IconSet(JSON.parse(record?.projectIconSetJSON as string) as IconifyJSON);
+
+		res.send({ code: 200, data: packSVGSprite(iconSet) });
 	} catch (error) {
+		console.log(error)
 		res.send({ code: 400, error });
 	}
 }

@@ -38,10 +38,10 @@ RUN rm -rf /tmp/*
 ENV ICONIFY_API_VERSION=$ICONIFY_API_VERSION
 
 # Expose the listening port of Iconify API
-EXPOSE 3030
+EXPOSE 3131
 
 # Add a healthcheck (default every 30 secs)
-HEALTHCHECK CMD curl http://localhost:3030/ || exit 1
+HEALTHCHECK CMD curl http://localhost:3131/ || exit 1
 
 CMD sh ./script/data_volume_init.sh && \
     npm run start

@@ -90,7 +90,7 @@ export async function startHTTPServer() {
 	const ignoreSuffix = ['.svg', '.css', '.json', '.js'];
 	server.addHook('onRequest', async (request, reply) => {
 		const routerPath = request.routeOptions.url as string;
-		console.log('[On Request]: ', routerPath);
+		console.log('[On Request]: ', request.routerPath);
 		if (ignoreRotues.includes(routerPath) || ignoreSuffix.some((ext) => routerPath.endsWith(ext))) {
 			return;
 		}

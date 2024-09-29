@@ -20,7 +20,7 @@
 	},
 	"scripts": {
 		"s": "yarn build && yarn start",
-		"dev": "yarn build:watch && yarn start:watch",
+		"dev": "yarn start",
 		"build": "tsc -b",
 		"test": "vitest --config vitest.config.mjs",
 		"start": "node --expose-gc lib/index.js",
